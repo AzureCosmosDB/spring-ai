@@ -110,15 +110,21 @@ class CosmosDBChatMemoryRepositoryAutoConfigurationEmulatorIT {
 
 	@Test
 	void customProperties() {
+		// Use a distinct container name so this test's custom partition key path does not
+		// collide with the shared container used by the save/find/delete tests. Without
+		// this isolation, whichever test ran first would create the shared container with
+		// a different PK path, causing subsequent writes to fail with substatus 1001
+		// (PartitionKey extracted from document doesn't match the one specified in the header).
 		this.contextRunner
 			.withPropertyValues(
+					"spring.ai.chat.memory.repository.cosmosdb.container-name=emulator-autoconfig-chat-memory-custom-pk",
 					"spring.ai.chat.memory.repository.cosmosdb.partition-key-path=/customPartitionKey")
 			.run(context -> {
 				CosmosDBChatMemoryRepositoryProperties properties = context
 					.getBean(CosmosDBChatMemoryRepositoryProperties.class);
 				assertThat(properties.getEndpoint()).isEqualTo(EMULATOR_ENDPOINT);
 				assertThat(properties.getDatabaseName()).isEqualTo("emulator-autoconfig-db");
-				assertThat(properties.getContainerName()).isEqualTo("emulator-autoconfig-chat-memory");
+				assertThat(properties.getContainerName()).isEqualTo("emulator-autoconfig-chat-memory-custom-pk");
 				assertThat(properties.getPartitionKeyPath()).isEqualTo("/customPartitionKey");
 			});
 	}
