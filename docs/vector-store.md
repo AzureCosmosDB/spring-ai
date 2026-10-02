@@ -16,7 +16,21 @@ DiskANN provides the following benefits:
 - **Scalability**: It can handle large datasets that exceed memory capacity, making it suitable for various applications, including machine learning and AI-driven solutions.
 - **Low Latency**: DiskANN minimizes latency during search operations, ensuring that applications can retrieve results quickly even with substantial data volumes.
 
-In the context of Spring AI for Azure Cosmos DB, vector searches will create and leverage DiskANN indexes to ensure optimal performance for similarity queries.
+`CosmosDBVectorStore` defaults to DiskANN when creating a container. You can select a different vector index type as described below.
+
+## Container Policies and Index Selection
+
+During initialization, `CosmosDBVectorStore` constructs the policies for a new container:
+
+- The vector embedding policy uses `/embedding`, `FLOAT32` data, and `COSINE` distance. `vectorDimensions` defaults to `1536`; set it to match your embedding model.
+- The indexing policy uses consistent indexing, excludes `/*`, includes `/metadata/?` and `/content/?`, and adds a vector index on `/embedding`.
+- `vectorIndexType` defaults to `CosmosVectorIndexType.DISK_ANN`. The builder accepts `CosmosVectorIndexType.FLAT`, `CosmosVectorIndexType.QUANTIZED_FLAT`, or `CosmosVectorIndexType.DISK_ANN`. With auto-configuration, set `spring.ai.vectorstore.cosmosdb.vectorIndexType` to `FLAT`, `QUANTIZED_FLAT`, or `DISK_ANN`.
+
+Choose dimensions and index type before creating the container. See the maintained [Azure Cosmos DB vector search guidance](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/vector-search) for prerequisites and index limits, and the [vector index selection rule](https://github.com/AzureCosmosDB/cosmosdb-agent-kit/blob/main/skills/cosmosdb-best-practices/rules/vector-index-type.md) for workload-based selection. DiskANN is the integration's default, not a recommendation for every workload.
+
+The builder and auto-configuration expose dimensions and index type, but not arbitrary embedding or indexing policies. The embedding path, data type, distance function, and included/excluded paths above are fixed by the integration. `metadataFields` configures filter conversion; it does not change the indexing policy.
+
+Initialization calls `createContainerIfNotExists`; it does not replace an existing container's policies or migrate existing data. For a pre-created container, you own ensuring that its partition key, embedding policy, and indexes are compatible with the configured store and embedding model. Changing application settings does not update that container's policies.
 
 ## Auto-Configuration Setup
 
@@ -42,6 +56,7 @@ The easiest way to use the Cosmos DB vector store is with Spring Boot auto-confi
 | `spring.ai.vectorstore.cosmosdb.metadataFields` | Comma-separated list of metadata fields |
 | `spring.ai.vectorstore.cosmosdb.vectorStoreThroughput` | The throughput for the vector store |
 | `spring.ai.vectorstore.cosmosdb.vectorDimensions` | The number of dimensions for the vectors |
+| `spring.ai.vectorstore.cosmosdb.vectorIndexType` | `FLAT`, `QUANTIZED_FLAT`, or `DISK_ANN` (default: `DISK_ANN`) |
 | `spring.ai.vectorstore.cosmosdb.endpoint` | The endpoint for the Cosmos DB |
 | `spring.ai.vectorstore.cosmosdb.key` | The key for the Cosmos DB (if not present, [DefaultAzureCredential](https://learn.microsoft.com/azure/developer/java/sdk/authentication/credential-chains#defaultazurecredential-overview) will be used) |
 
@@ -158,6 +173,7 @@ public class CosmosVectorStoreConfig {
 | `metadataFields` | List of metadata fields that will be used for filtering |
 | `vectorStoreThroughput` | The throughput (RU/s) for the vector store container |
 | `vectorDimensions` | The number of dimensions for your vectors (should match your embedding model) |
+| `vectorIndexType` | `CosmosVectorIndexType.FLAT`, `CosmosVectorIndexType.QUANTIZED_FLAT`, or `CosmosVectorIndexType.DISK_ANN` (default) |
 | `batchingStrategy` | Strategy for batching document operations (optional) |
 
 ## Complex Searches with Filters
