@@ -30,7 +30,7 @@ Choose dimensions and index type before creating the container. See the maintain
 
 The builder and auto-configuration expose dimensions and index type, but not arbitrary embedding or indexing policies. The embedding path, data type, distance function, and included/excluded paths above are fixed by the integration. `metadataFields` configures filter conversion; it does not change the indexing policy.
 
-Initialization calls `createContainerIfNotExists`; it does not replace an existing container's policies or migrate existing data. For a pre-created container, you own ensuring that its partition key, embedding policy, and indexes are compatible with the configured store and embedding model. Changing application settings does not update that container's policies.
+Initialization calls `createContainerIfNotExists`; it does not replace an existing container's policies or migrate existing data. For a pre-created container, you are responsible for ensuring that its partition key, embedding policy, and indexes are compatible with the configured store and embedding model. Changing application settings does not update that container's policies.
 
 ## Auto-Configuration Setup
 
