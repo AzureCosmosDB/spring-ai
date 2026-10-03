@@ -40,7 +40,18 @@
   <li><strong>Scalability:</strong> It can handle large datasets that exceed memory capacity, making it suitable for various applications, including machine learning and AI-driven solutions.</li>
   <li><strong>Low Latency:</strong> DiskANN minimizes latency during search operations, ensuring that applications can retrieve results quickly even with substantial data volumes.</li>
 </ul>
-<div class="tip"><strong>💡 Note:</strong> In the context of Spring AI for Azure Cosmos DB, vector searches will create and leverage DiskANN indexes to ensure optimal performance for similarity queries.</div>
+<p><code>CosmosDBVectorStore</code> defaults to DiskANN when creating a container. You can select a different vector index type as described below.</p>
+
+<h2 id="container-policies-and-index-selection">Container Policies and Index Selection</h2>
+<p>During initialization, <code>CosmosDBVectorStore</code> constructs the policies for a new container:</p>
+<ul>
+  <li>The vector embedding policy uses <code>/embedding</code>, <code>FLOAT32</code> data, and <code>COSINE</code> distance. <code>vectorDimensions</code> defaults to <code>1536</code>; set it to match your embedding model.</li>
+  <li>The indexing policy uses consistent indexing, excludes <code>/*</code>, includes <code>/metadata/?</code> and <code>/content/?</code>, and adds a vector index on <code>/embedding</code>.</li>
+  <li><code>vectorIndexType</code> defaults to <code>CosmosVectorIndexType.DISK_ANN</code>. The builder accepts <code>CosmosVectorIndexType.FLAT</code>, <code>CosmosVectorIndexType.QUANTIZED_FLAT</code>, or <code>CosmosVectorIndexType.DISK_ANN</code>. With auto-configuration, set <code>spring.ai.vectorstore.cosmosdb.vectorIndexType</code> to <code>FLAT</code>, <code>QUANTIZED_FLAT</code>, or <code>DISK_ANN</code>.</li>
+</ul>
+<p>Choose dimensions and index type before creating the container. See the maintained <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/vector-search">Azure Cosmos DB vector search guidance</a> for prerequisites and index limits, and the <a href="https://github.com/AzureCosmosDB/cosmosdb-agent-kit/blob/main/skills/cosmosdb-best-practices/rules/vector-index-type.md">vector index selection rule</a> for workload-based selection. DiskANN is the integration's default, not a recommendation for every workload.</p>
+<p>The builder and auto-configuration expose dimensions and index type, but not arbitrary embedding or indexing policies. The embedding path, data type, distance function, and included/excluded paths above are fixed by the integration. <code>metadataFields</code> configures filter conversion; it does not change the indexing policy.</p>
+<p>Initialization calls <code>createContainerIfNotExists</code>; it does not replace an existing container's policies or migrate existing data. For a pre-created container, you own ensuring that its partition key, embedding policy, and indexes are compatible with the configured store and embedding model. Changing application settings does not update that container's policies.</p>
 
 <div class="tip"><strong>💡 Tip:</strong> For zero-config Spring Boot setup, see the <a href="vector-store-autoconfigure.html">Auto-Configuration</a> page.</div>
 
@@ -99,6 +110,7 @@ public class CosmosVectorStoreConfig {
 <tr><td><code>metadataFields</code></td><td>List of metadata fields used for filtering</td></tr>
 <tr><td><code>vectorStoreThroughput</code></td><td>The throughput (RU/s) for the vector store container</td></tr>
 <tr><td><code>vectorDimensions</code></td><td>The number of dimensions for your vectors (should match your embedding model)</td></tr>
+<tr><td><code>vectorIndexType</code></td><td><code>CosmosVectorIndexType.FLAT</code>, <code>CosmosVectorIndexType.QUANTIZED_FLAT</code>, or <code>CosmosVectorIndexType.DISK_ANN</code> (default)</td></tr>
 <tr><td><code>batchingStrategy</code></td><td>Strategy for batching document operations (optional)</td></tr>
 </table>
 

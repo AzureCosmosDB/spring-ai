@@ -47,6 +47,10 @@ spring.ai.vectorstore.cosmosdb.vectorStoreThroughput=1000
 spring.ai.vectorstore.cosmosdb.vectorDimensions=1536
 spring.ai.vectorstore.cosmosdb.partitionKeyPath=/id</code></pre>
 
+<h3>Container Policies and Index Selection</h3>
+<p>Auto-configuration delegates container initialization to <code>CosmosDBVectorStore</code>. For a new container, <code>vectorDimensions</code> defaults to <code>1536</code> and <code>vectorIndexType</code> defaults to <code>DISK_ANN</code>. Set dimensions to match your embedding model; set <code>spring.ai.vectorstore.cosmosdb.vectorIndexType</code> to <code>FLAT</code>, <code>QUANTIZED_FLAT</code>, or <code>DISK_ANN</code> to select the index type.</p>
+<p>See <a href="vector-store.html#container-policies-and-index-selection">Container Policies and Index Selection</a> for the integration's fixed policy fields, supported controls, and maintained selection guidance. Initialization does not replace an existing container's policies or migrate existing data; changing properties does not update those policies.</p>
+
 <h3>Authentication</h3>
 <p><strong>Key-based</strong> (set the <code>key</code> property):</p>
 <pre><code class="language-properties">spring.ai.vectorstore.cosmosdb.key=your-cosmos-db-key</code></pre>
@@ -122,6 +126,7 @@ public class DemoApplication implements CommandLineRunner {
 <tr><td><code>spring.ai.vectorstore.cosmosdb.metadataFields</code></td><td>Metadata fields for filtering</td><td>(empty)</td></tr>
 <tr><td><code>spring.ai.vectorstore.cosmosdb.vectorStoreThroughput</code></td><td>Container throughput (RU/s)</td><td><code>400</code></td></tr>
 <tr><td><code>spring.ai.vectorstore.cosmosdb.vectorDimensions</code></td><td>Vector dimensions</td><td><code>1536</code></td></tr>
+<tr><td><code>spring.ai.vectorstore.cosmosdb.vectorIndexType</code></td><td><code>FLAT</code>, <code>QUANTIZED_FLAT</code>, or <code>DISK_ANN</code></td><td><code>DISK_ANN</code></td></tr>
 </table>
 
 <h2>Manual Configuration</h2>
